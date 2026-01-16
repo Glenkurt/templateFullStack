@@ -1,0 +1,38 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# .NET
+api/Api/bin/
+api/Api/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.sass-cache/
+frontend/npm-debug.log
+frontend/yarn-error.log
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docker
+docker-compose.override.yml
+
+# Test coverage
+coverage/
+*.lcov
