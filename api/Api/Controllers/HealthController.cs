@@ -1,44 +1,41 @@
-using Api.Data;
+using Api.Models.DTOs;
+using Api.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Api.Controllers;
 
+/// <summary>
+/// Health check endpoint for monitoring and container orchestration.
+/// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
+[EnableRateLimiting("fixed")]
 public class HealthController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IHealthService _healthService;
 
-    public HealthController(AppDbContext context)
+    public HealthController(IHealthService healthService)
     {
-        _context = context;
+        _healthService = healthService;
     }
 
+    /// <summary>
+    /// Performs a comprehensive health check including database connectivity.
+    /// </summary>
+    /// <returns>Health status with component details.</returns>
     [HttpGet]
-    public async Task<IActionResult> Get()
+    [ProducesResponseType(typeof(HealthResponseDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
-        try
+        var health = await _healthService.CheckHealthAsync(cancellationToken);
+
+        // Return 503 if unhealthy for proper load balancer detection
+        if (health.Status == "unhealthy")
         {
-            // Test database connection
-            var canConnect = await _context.Database.CanConnectAsync();
-            
-            return Ok(new
-            {
-                status = canConnect ? "ok" : "degraded",
-                timestamp = DateTime.UtcNow,
-                database = canConnect ? "connected" : "disconnected"
-            });
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, health);
         }
-        catch (Exception ex)
-        {
-            return Ok(new
-            {
-                status = "error",
-                timestamp = DateTime.UtcNow,
-                database = "disconnected",
-                message = ex.Message
-            });
-        }
+
+        return Ok(health);
     }
 }

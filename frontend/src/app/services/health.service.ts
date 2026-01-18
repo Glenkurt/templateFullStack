@@ -7,7 +7,7 @@ export interface HealthResponse {
   status: string;
   timestamp: string;
   database: string;
-  message?: string;
+  version: string;
 }
 
 @Injectable({
@@ -18,6 +18,6 @@ export class HealthService {
   private apiUrl = environment.apiBaseUrl;
 
   checkHealth(): Observable<HealthResponse> {
-    return this.http.get<HealthResponse>(`${this.apiUrl}/health`);
+    return this.http.get<HealthResponse>(`${this.apiUrl}/v1/health`);
   }
 }

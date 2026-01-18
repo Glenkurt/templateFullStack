@@ -6,7 +6,7 @@
 
   <section class="health-check">
     <h2>API Status</h2>
-    
+
     @if (loading) {
       <div class="status loading">
         <span class="spinner"></span>
@@ -15,7 +15,11 @@
     }
 
     @if (healthStatus) {
-      <div class="status" [class.ok]="healthStatus.status === 'ok'" [class.error]="healthStatus.status !== 'ok'">
+      <div
+        class="status"
+        [class.ok]="healthStatus.status === 'ok'"
+        [class.error]="healthStatus.status !== 'ok'"
+      >
         <div class="status-icon">
           {{ healthStatus.status === 'ok' ? '✅' : '⚠️' }}
         </div>
@@ -36,17 +40,15 @@
       </div>
     }
 
-    <button (click)="checkApiHealth()" [disabled]="loading">
-      🔄 Refresh Status
-    </button>
+    <button (click)="checkApiHealth()" [disabled]="loading">🔄 Refresh Status</button>
   </section>
 
   <section class="info">
     <h2>Getting Started</h2>
     <ul>
-      <li>API endpoint: <code>/api/health</code></li>
+      <li>API endpoint: <code>/api/v1/health</code></li>
       <li>Angular frontend: <code>http://localhost:4200</code></li>
-      <li>API server: <code>http://localhost:5000</code></li>
+      <li>API server: <code>http://localhost:5093</code></li>
     </ul>
   </section>
 </main>

@@ -1,0 +1,51 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# .NET build outputs
+api/Api/bin/
+api/Api/obj/
+*.user
+*.suo
+
+# Angular build outputs and dependencies
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+Dockerfile
+
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
+
+# Test outputs
+coverage/
+*.lcov
+test-results/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# GitHub
+.github/

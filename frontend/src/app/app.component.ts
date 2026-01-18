@@ -25,13 +25,13 @@ export class AppComponent implements OnInit {
   checkApiHealth(): void {
     this.loading = true;
     this.error = null;
-    
+
     this.healthService.checkHealth().subscribe({
-      next: (response) => {
+      next: response => {
         this.healthStatus = response;
         this.loading = false;
       },
-      error: (err) => {
+      error: err => {
         this.error = 'Unable to connect to API';
         this.loading = false;
         console.error('Health check failed:', err);
