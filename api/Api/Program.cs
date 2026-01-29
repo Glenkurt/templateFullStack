@@ -38,11 +38,15 @@ try
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
     // Application services (business logic layer)
-    builder.Services.AddApplicationServices();
+    builder.Services.AddApplicationServices(builder.Configuration);
 
     // JWT Authentication
     builder.Services.AddJwtAuthentication(builder.Configuration);
-    builder.Services.AddAuthorization();
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin", "Owner"));
+        options.AddPolicy("OwnerOnly", policy => policy.RequireRole("Owner"));
+    });
 
     // Rate limiting
     builder.Services.AddRateLimiting();

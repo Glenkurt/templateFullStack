@@ -11,10 +11,12 @@ public class ApplicationUser
     public string PasswordHash { get; set; } = string.Empty;
 
     /// <summary>
-    /// Comma-separated role list for template simplicity.
-    /// Replace with a normalized role table for production.
+    /// User role. Possible values: "User", "Admin", "Owner"
     /// </summary>
-    public string Roles { get; set; } = "User";
+    public string Role { get; set; } = "User";
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public Subscription? Subscription { get; set; }
 }

@@ -99,14 +99,50 @@ public class AuthController : ControllerBase
     {
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
-        var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value);
+        var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User";
 
         return Ok(new
         {
             UserId = userId,
             Email = email,
-            Roles = roles
+            Role = role
         });
+    }
+
+    /// <summary>
+    /// Requests a password reset email.
+    /// </summary>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        await _authService.ForgotPasswordAsync(request.Email);
+        // Always return OK to prevent email enumeration
+        return Ok(new { message = "If an account exists with this email, you will receive a password reset link." });
+    }
+
+    /// <summary>
+    /// Resets the password using a valid token.
+    /// </summary>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        var success = await _authService.ResetPasswordAsync(request.Token, request.NewPassword);
+        if (!success)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Password Reset Failed",
+                Detail = "Invalid or expired token."
+            });
+        }
+
+        return Ok(new { message = "Password has been reset successfully." });
     }
 
     private void SetRefreshTokenCookie(string refreshToken)

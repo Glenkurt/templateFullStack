@@ -4,6 +4,7 @@ using Api.Models.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Resend;
 
 namespace Api.Extensions;
 
@@ -16,11 +17,27 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Registers application services (business logic layer).
     /// </summary>
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IPasswordHasher<ApplicationUser>, PasswordHasher<ApplicationUser>>();
         services.AddScoped<IHealthService, HealthService>();
+        services.AddScoped<IAdminService, AdminService>();
+
+        // Email service
+        services.AddOptions();
+        services.AddHttpClient<ResendClient>();
+        services.Configure<ResendClientOptions>(options =>
+        {
+            options.ApiToken = configuration["Email:ApiKey"] ?? "";
+        });
+        services.AddTransient<IResend, ResendClient>();
+        services.AddScoped<IEmailService, EmailService>();
+
+        // Auth service (depends on EmailService)
         services.AddScoped<IAuthService, AuthService>();
+
+        // Billing service
+        services.AddScoped<IBillingService, BillingService>();
 
         return services;
     }
