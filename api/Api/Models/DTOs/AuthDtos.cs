@@ -38,3 +38,24 @@ public record AuthResponseDto(
     int ExpiresIn,
     string TokenType
 );
+
+/// <summary>
+/// Request DTO for forgot password.
+/// </summary>
+public record ForgotPasswordRequest(
+    [Required]
+    [EmailAddress]
+    string Email
+);
+
+/// <summary>
+/// Request DTO for password reset.
+/// </summary>
+public record ResetPasswordRequest(
+    [Required]
+    string Token,
+
+    [Required]
+    [MinLength(8)]
+    string NewPassword
+);

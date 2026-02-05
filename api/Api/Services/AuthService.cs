@@ -26,17 +26,20 @@ public class AuthService : IAuthService
     private readonly ILogger<AuthService> _logger;
     private readonly AppDbContext _dbContext;
     private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
+    private readonly IEmailService _emailService;
 
     public AuthService(
         IConfiguration configuration,
         ILogger<AuthService> logger,
         AppDbContext dbContext,
-        IPasswordHasher<ApplicationUser> passwordHasher)
+        IPasswordHasher<ApplicationUser> passwordHasher,
+        IEmailService emailService)
     {
         _configuration = configuration;
         _logger = logger;
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
+        _emailService = emailService;
     }
 
     public Task<AuthResponseDto?> LoginAsync(LoginRequestDto request)
@@ -122,8 +125,7 @@ public class AuthService : IAuthService
             return null;
         }
 
-        var roles = ParseRoles(user.Roles);
-        var accessToken = GenerateAccessToken(user.Id.ToString(), user.Email, roles);
+        var accessToken = GenerateAccessToken(user.Id.ToString(), user.Email, new[] { user.Role });
         var refreshToken = GenerateRefreshToken();
         var refreshTokenHash = HashToken(refreshToken);
         var refreshExpiryDays = _configuration.GetValue<int>("Jwt:RefreshExpiryDays", 7);
@@ -179,8 +181,7 @@ public class AuthService : IAuthService
         _dbContext.RefreshTokens.Add(newRefreshEntity);
         await _dbContext.SaveChangesAsync();
 
-        var roles = ParseRoles(tokenEntity.User.Roles);
-        var accessToken = GenerateAccessToken(tokenEntity.User.Id.ToString(), tokenEntity.User.Email, roles);
+        var accessToken = GenerateAccessToken(tokenEntity.User.Id.ToString(), tokenEntity.User.Email, new[] { tokenEntity.User.Role });
         var expiryMinutes = _configuration.GetValue<int>("Jwt:ExpiryMinutes", 60);
 
         _logger.LogInformation("Token refreshed successfully for {Email}", tokenEntity.User.Email);
@@ -193,15 +194,78 @@ public class AuthService : IAuthService
         );
     }
 
-    private static IEnumerable<string> ParseRoles(string roles)
-    {
-        return roles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-    }
-
     private static string HashToken(string token)
     {
         using var sha = SHA256.Create();
         var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(token));
         return Convert.ToBase64String(bytes);
+    }
+
+    public async Task<bool> ForgotPasswordAsync(string email)
+    {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+
+        if (user == null)
+        {
+            // Don't reveal if email exists
+            _logger.LogInformation("Password reset requested for non-existent email: {Email}", email);
+            return true;
+        }
+
+        // Invalidate old tokens
+        var oldTokens = await _dbContext.PasswordResetTokens
+            .Where(t => t.UserId == user.Id && !t.Used)
+            .ToListAsync();
+        foreach (var oldToken in oldTokens)
+        {
+            oldToken.Used = true;
+        }
+
+        // Create new token
+        var tokenBytes = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(tokenBytes);
+        var token = Convert.ToBase64String(tokenBytes);
+
+        var resetToken = new PasswordResetToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Token = token,
+            ExpiresAt = DateTime.UtcNow.AddHours(1)
+        };
+
+        _dbContext.PasswordResetTokens.Add(resetToken);
+        await _dbContext.SaveChangesAsync();
+
+        // Send email
+        var resetUrl = $"{_configuration["App:Url"]}/reset-password";
+        await _emailService.SendPasswordResetEmailAsync(user.Email, token, resetUrl);
+
+        _logger.LogInformation("Password reset email sent to {Email}", user.Email);
+        return true;
+    }
+
+    public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+    {
+        var resetToken = await _dbContext.PasswordResetTokens
+            .Include(t => t.User)
+            .FirstOrDefaultAsync(t => t.Token == token && !t.Used && t.ExpiresAt > DateTime.UtcNow);
+
+        if (resetToken == null)
+        {
+            _logger.LogWarning("Invalid or expired password reset token");
+            return false;
+        }
+
+        // Update password
+        resetToken.User.PasswordHash = _passwordHasher.HashPassword(resetToken.User, newPassword);
+        resetToken.Used = true;
+
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Password reset successfully for {Email}", resetToken.User.Email);
+        return true;
     }
 }

@@ -36,4 +36,19 @@ public interface IAuthService
     /// </summary>
     /// <returns>Refresh token string.</returns>
     string GenerateRefreshToken();
+
+    /// <summary>
+    /// Initiates the password reset process by sending an email with a reset link.
+    /// </summary>
+    /// <param name="email">The user's email address.</param>
+    /// <returns>True if email was sent (always returns true to prevent email enumeration).</returns>
+    Task<bool> ForgotPasswordAsync(string email);
+
+    /// <summary>
+    /// Resets the user's password using a valid reset token.
+    /// </summary>
+    /// <param name="token">The password reset token.</param>
+    /// <param name="newPassword">The new password.</param>
+    /// <returns>True if password was reset successfully, false if token is invalid or expired.</returns>
+    Task<bool> ResetPasswordAsync(string token, string newPassword);
 }

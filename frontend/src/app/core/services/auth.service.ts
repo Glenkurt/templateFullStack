@@ -19,7 +19,7 @@ export interface AuthResponse {
 export interface User {
   userId: string;
   email: string;
-  roles: string[];
+  role: 'User' | 'Admin' | 'Owner';
 }
 
 /**
@@ -46,6 +46,19 @@ export class AuthService {
   readonly currentUser = this.currentUserSignal.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUserSignal() !== null);
   readonly isLoading = this.isLoadingSignal.asReadonly();
+
+  // Role-based computed properties
+  readonly isAdmin = computed(() => {
+    const user = this.currentUserSignal();
+    return user?.role === 'Admin' || user?.role === 'Owner';
+  });
+
+  readonly isOwner = computed(() => {
+    const user = this.currentUserSignal();
+    return user?.role === 'Owner';
+  });
+
+  readonly userRole = computed(() => this.currentUserSignal()?.role ?? null);
 
   constructor(private http: HttpClient) {
     // Initialize auth state from stored token on app startup
@@ -146,6 +159,6 @@ export class AuthService {
    */
   hasRole(role: string): boolean {
     const user = this.currentUserSignal();
-    return user?.roles.includes(role) ?? false;
+    return user?.role === role;
   }
 }

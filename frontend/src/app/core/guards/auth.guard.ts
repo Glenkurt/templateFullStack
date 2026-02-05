@@ -72,3 +72,26 @@ export const roleGuard: CanActivateFn = (route, state) => {
 
   return true;
 };
+
+/**
+ * Route guard that protects admin routes.
+ * Allows Admin and Owner roles.
+ */
+export const adminGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isAuthenticated()) {
+    router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: state.url }
+    });
+    return false;
+  }
+
+  if (authService.isAdmin()) {
+    return true;
+  }
+
+  router.navigate(['/unauthorized']);
+  return false;
+};
