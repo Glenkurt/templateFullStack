@@ -4,7 +4,6 @@ using Api.Models.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Resend;
 
 namespace Api.Extensions;
 
@@ -24,13 +23,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAdminService, AdminService>();
 
         // Email service
-        services.AddOptions();
-        services.AddHttpClient<ResendClient>();
-        services.Configure<ResendClientOptions>(options =>
-        {
-            options.ApiToken = configuration["Email:ApiKey"] ?? "";
-        });
-        services.AddTransient<IResend, ResendClient>();
         services.AddScoped<IEmailService, EmailService>();
 
         // Auth service (depends on EmailService)
@@ -38,6 +30,14 @@ public static class ServiceCollectionExtensions
 
         // Billing service
         services.AddScoped<IBillingService, BillingService>();
+
+        // Prospect dashboard services
+        services.AddScoped<IClientService, ClientService>();
+        services.AddScoped<ITagService, TagService>();
+        services.AddScoped<IExpenseService, ExpenseService>();
+        services.AddScoped<IRevenueService, RevenueService>();
+        services.AddScoped<ICampaignService, CampaignService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
         return services;
     }

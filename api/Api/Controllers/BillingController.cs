@@ -84,7 +84,7 @@ public class BillingController : ControllerBase
             await _billingService.HandleWebhookAsync(json, signature);
             return Ok();
         }
-        catch (Stripe.StripeException e)
+        catch (Exception e)
         {
             return BadRequest(new { error = e.Message });
         }

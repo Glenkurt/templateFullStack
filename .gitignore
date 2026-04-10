@@ -8,6 +8,8 @@
 # .NET
 api/Api/bin/
 api/Api/obj/
+api/Api.Tests/bin/
+api/Api.Tests/obj/
 *.user
 *.suo
 *.userosscache
