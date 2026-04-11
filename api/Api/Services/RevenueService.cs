@@ -27,10 +27,10 @@ public class RevenueService : IRevenueService
                 r.Id,
                 r.Amount,
                 r.Date,
-                r.TagId,
-                r.Tag != null ? r.Tag.Name : null,
-                r.ClientId,
-                r.Client != null ? $"{r.Client.FirstName} {r.Client.LastName}" : null,
+                r.Tag != null && r.Tag.UserId == userId ? r.TagId : null,
+                r.Tag != null && r.Tag.UserId == userId ? r.Tag.Name : null,
+                r.Client != null && r.Client.UserId == userId ? r.ClientId : null,
+                r.Client != null && r.Client.UserId == userId ? $"{r.Client.FirstName} {r.Client.LastName}" : null,
                 r.CreatedAt
             ))
             .ToListAsync();
@@ -47,10 +47,10 @@ public class RevenueService : IRevenueService
                 r.Id,
                 r.Amount,
                 r.Date,
-                r.TagId,
-                r.Tag != null ? r.Tag.Name : null,
-                r.ClientId,
-                r.Client != null ? $"{r.Client.FirstName} {r.Client.LastName}" : null,
+                r.Tag != null && r.Tag.UserId == userId ? r.TagId : null,
+                r.Tag != null && r.Tag.UserId == userId ? r.Tag.Name : null,
+                r.Client != null && r.Client.UserId == userId ? r.ClientId : null,
+                r.Client != null && r.Client.UserId == userId ? $"{r.Client.FirstName} {r.Client.LastName}" : null,
                 r.CreatedAt
             ))
             .FirstOrDefaultAsync();
@@ -60,7 +60,7 @@ public class RevenueService : IRevenueService
     {
         if (request.TagId.HasValue)
         {
-            await EnsureTagExistsForUserAsync(request.TagId.Value, userId);
+            await EnsureTagExistsForUserAsync(request.TagId.Value, userId, TagCategory.Revenue);
         }
 
         if (request.ClientId.HasValue)
@@ -81,12 +81,15 @@ public class RevenueService : IRevenueService
         await _context.SaveChangesAsync();
 
         var tagName = revenue.TagId.HasValue
-            ? await _context.Tags.Where(t => t.Id == revenue.TagId.Value).Select(t => t.Name).FirstOrDefaultAsync()
+            ? await _context.Tags
+                .Where(t => t.Id == revenue.TagId.Value && t.UserId == userId && t.Category == TagCategory.Revenue)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync()
             : null;
 
         var clientName = revenue.ClientId.HasValue
             ? await _context.Clients
-                .Where(c => c.Id == revenue.ClientId.Value)
+                .Where(c => c.Id == revenue.ClientId.Value && c.UserId == userId)
                 .Select(c => $"{c.FirstName} {c.LastName}")
                 .FirstOrDefaultAsync()
             : null;
@@ -121,27 +124,38 @@ public class RevenueService : IRevenueService
             revenue.Date = request.Date.Value;
         }
 
-        if (request.TagId.HasValue)
+        if (request.TagIdSpecified)
         {
-            await EnsureTagExistsForUserAsync(request.TagId.Value, userId);
-            revenue.TagId = request.TagId.Value;
+            if (request.TagId.HasValue)
+            {
+                await EnsureTagExistsForUserAsync(request.TagId.Value, userId, TagCategory.Revenue);
+            }
+
+            revenue.TagId = request.TagId;
         }
 
-        if (request.ClientId.HasValue)
+        if (request.ClientIdSpecified)
         {
-            await EnsureClientExistsForUserAsync(request.ClientId.Value, userId);
-            revenue.ClientId = request.ClientId.Value;
+            if (request.ClientId.HasValue)
+            {
+                await EnsureClientExistsForUserAsync(request.ClientId.Value, userId);
+            }
+
+            revenue.ClientId = request.ClientId;
         }
 
         await _context.SaveChangesAsync();
 
         var tagName = revenue.TagId.HasValue
-            ? await _context.Tags.Where(t => t.Id == revenue.TagId.Value).Select(t => t.Name).FirstOrDefaultAsync()
+            ? await _context.Tags
+                .Where(t => t.Id == revenue.TagId.Value && t.UserId == userId && t.Category == TagCategory.Revenue)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync()
             : null;
 
         var clientName = revenue.ClientId.HasValue
             ? await _context.Clients
-                .Where(c => c.Id == revenue.ClientId.Value)
+                .Where(c => c.Id == revenue.ClientId.Value && c.UserId == userId)
                 .Select(c => $"{c.FirstName} {c.LastName}")
                 .FirstOrDefaultAsync()
             : null;
@@ -171,12 +185,22 @@ public class RevenueService : IRevenueService
         return true;
     }
 
-    private async Task EnsureTagExistsForUserAsync(Guid tagId, Guid userId)
+    private async Task EnsureTagExistsForUserAsync(Guid tagId, Guid userId, TagCategory category)
     {
-        var exists = await _context.Tags.AnyAsync(t => t.Id == tagId && t.UserId == userId);
-        if (!exists)
+        var tag = await _context.Tags
+            .AsNoTracking()
+            .Where(t => t.Id == tagId && t.UserId == userId)
+            .Select(t => new { t.Category })
+            .FirstOrDefaultAsync();
+
+        if (tag is null)
         {
             throw new InvalidOperationException("Tag not found.");
+        }
+
+        if (tag.Category != category)
+        {
+            throw new InvalidOperationException("Tag category is invalid.");
         }
     }
 

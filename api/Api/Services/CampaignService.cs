@@ -60,6 +60,7 @@ public class CampaignService : ICampaignService
 
     public async Task<CampaignDto> CreateCampaignAsync(CreateCampaignRequest request, Guid userId)
     {
+        ValidateCampaignState(request.Status, request.StartDate, request.EndDate);
         await EnsureClientExistsForUserAsync(request.ClientId, userId);
 
         var campaign = new Campaign
@@ -103,6 +104,12 @@ public class CampaignService : ICampaignService
         {
             return null;
         }
+
+        var nextStartDate = request.StartDate ?? campaign.StartDate;
+        var nextEndDate = request.EndDate ?? campaign.EndDate;
+        var nextStatus = request.Status ?? campaign.Status;
+
+        ValidateCampaignState(nextStatus, nextStartDate, nextEndDate);
 
         if (!string.IsNullOrWhiteSpace(request.Title))
         {
@@ -180,6 +187,19 @@ public class CampaignService : ICampaignService
         if (!exists)
         {
             throw new InvalidOperationException("Client not found.");
+        }
+    }
+
+    private static void ValidateCampaignState(CampaignStatus status, DateOnly startDate, DateOnly? endDate)
+    {
+        if (!Enum.IsDefined(status))
+        {
+            throw new InvalidOperationException("Campaign status is invalid.");
+        }
+
+        if (endDate.HasValue && endDate.Value < startDate)
+        {
+            throw new InvalidOperationException("Campaign end date cannot be before start date.");
         }
     }
 }

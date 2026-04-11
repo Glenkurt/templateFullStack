@@ -42,7 +42,8 @@ public class TagService : ITagService
 
     public async Task<TagDto> CreateTagAsync(CreateTagRequest request, Guid userId)
     {
-        var normalizedName = request.Name.Trim().ToLowerInvariant();
+        var name = RequireName(request.Name, nameof(request.Name));
+        var normalizedName = name.ToLowerInvariant();
         var exists = await _context.Tags.AnyAsync(t =>
             t.UserId == userId &&
             t.Category == request.Category &&
@@ -55,13 +56,20 @@ public class TagService : ITagService
 
         var tag = new Tag
         {
-            Name = request.Name.Trim(),
+            Name = name,
             Category = request.Category,
             UserId = userId
         };
 
         _context.Tags.Add(tag);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("A tag with this name already exists for this category.");
+        }
 
         return new TagDto(tag.Id, tag.Name, tag.Category, tag.CreatedAt);
     }
@@ -74,7 +82,7 @@ public class TagService : ITagService
             return null;
         }
 
-        var nextName = string.IsNullOrWhiteSpace(request.Name) ? tag.Name : request.Name.Trim();
+        var nextName = request.Name is null ? tag.Name : RequireName(request.Name, nameof(request.Name));
         var nextCategory = request.Category ?? tag.Category;
         var normalizedName = nextName.ToLowerInvariant();
 
@@ -92,7 +100,14 @@ public class TagService : ITagService
         tag.Name = nextName;
         tag.Category = nextCategory;
 
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("A tag with this name already exists for this category.");
+        }
 
         return new TagDto(tag.Id, tag.Name, tag.Category, tag.CreatedAt);
     }
@@ -108,5 +123,15 @@ public class TagService : ITagService
         _context.Tags.Remove(tag);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private static string RequireName(string? value, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new ArgumentException($"{fieldName} is required.", fieldName);
+        }
+
+        return value.Trim();
     }
 }

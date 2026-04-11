@@ -51,8 +51,10 @@ public class ClientService : IClientService
 
     public async Task<ClientDto> CreateClientAsync(CreateClientRequest request, Guid userId)
     {
-        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
-        var emailExists = await _context.Clients.AnyAsync(c => c.UserId == userId && c.Email.ToLower() == normalizedEmail);
+        var firstName = RequireValue(request.FirstName, nameof(request.FirstName));
+        var lastName = RequireValue(request.LastName, nameof(request.LastName));
+        var normalizedEmail = NormalizeEmail(request.Email, nameof(request.Email));
+        var emailExists = await _context.Clients.AnyAsync(c => c.UserId == userId && c.Email == normalizedEmail);
         if (emailExists)
         {
             throw new InvalidOperationException("A client with this email already exists.");
@@ -60,16 +62,23 @@ public class ClientService : IClientService
 
         var client = new Client
         {
-            FirstName = request.FirstName.Trim(),
-            LastName = request.LastName.Trim(),
-            Email = request.Email.Trim(),
+            FirstName = firstName,
+            LastName = lastName,
+            Email = normalizedEmail,
             Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim(),
             CompanyName = string.IsNullOrWhiteSpace(request.CompanyName) ? null : request.CompanyName.Trim(),
             UserId = userId
         };
 
         _context.Clients.Add(client);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("A client with this email already exists.");
+        }
 
         return new ClientDto(
             client.Id,
@@ -90,29 +99,26 @@ public class ClientService : IClientService
             return null;
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Email))
+        if (request.FirstName is not null)
         {
-            var normalizedEmail = request.Email.Trim().ToLowerInvariant();
-            var emailExists = await _context.Clients.AnyAsync(c => c.UserId == userId && c.Id != id && c.Email.ToLower() == normalizedEmail);
+            client.FirstName = RequireValue(request.FirstName, nameof(request.FirstName));
+        }
+
+        if (request.LastName is not null)
+        {
+            client.LastName = RequireValue(request.LastName, nameof(request.LastName));
+        }
+
+        if (request.Email is not null)
+        {
+            var normalizedEmail = NormalizeEmail(request.Email, nameof(request.Email));
+            var emailExists = await _context.Clients.AnyAsync(c => c.UserId == userId && c.Id != id && c.Email == normalizedEmail);
             if (emailExists)
             {
                 throw new InvalidOperationException("A client with this email already exists.");
             }
-        }
 
-        if (!string.IsNullOrWhiteSpace(request.FirstName))
-        {
-            client.FirstName = request.FirstName.Trim();
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.LastName))
-        {
-            client.LastName = request.LastName.Trim();
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Email))
-        {
-            client.Email = request.Email.Trim();
+            client.Email = normalizedEmail;
         }
 
         if (request.Phone is not null)
@@ -125,7 +131,14 @@ public class ClientService : IClientService
             client.CompanyName = string.IsNullOrWhiteSpace(request.CompanyName) ? null : request.CompanyName.Trim();
         }
 
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("A client with this email already exists.");
+        }
 
         return new ClientDto(
             client.Id,
@@ -149,5 +162,20 @@ public class ClientService : IClientService
         _context.Clients.Remove(client);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private static string RequireValue(string? value, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new ArgumentException($"{fieldName} is required.", fieldName);
+        }
+
+        return value.Trim();
+    }
+
+    private static string NormalizeEmail(string? value, string fieldName)
+    {
+        return RequireValue(value, fieldName).ToLowerInvariant();
     }
 }

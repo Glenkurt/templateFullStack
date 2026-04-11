@@ -87,6 +87,130 @@ public class ClientEndpointTests : IClassFixture<CustomWebApplicationFactory>
         clients.Should().NotContain(c => c.FirstName == "Other" && c.LastName == "Client");
     }
 
+    [Fact]
+    public async Task CreateClient_WithDuplicateEmail_ReturnsConflict()
+    {
+        var email = $"client-duplicate-{Guid.NewGuid():N}@example.com";
+        var token = await GetAccessTokenAsync(email, "Test@1234");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var request = new CreateClientRequest(
+            FirstName: "John",
+            LastName: "Doe",
+            Email: $"duplicate-{Guid.NewGuid():N}@example.com",
+            Phone: null,
+            CompanyName: null
+        );
+
+        var firstResponse = await _client.PostAsJsonAsync("/api/v1/clients", request);
+        firstResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var duplicateResponse = await _client.PostAsJsonAsync(
+            "/api/v1/clients",
+            request with { Email = request.Email.ToUpperInvariant() });
+
+        duplicateResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task UpdateAndDeleteClient_RespectUserIsolationAndCrudFlow()
+    {
+        var email = $"client-flow-{Guid.NewGuid():N}@example.com";
+        var ownerUserId = await EnsureUserAsync(email, "Test@1234");
+        var otherUserEmail = $"other-flow-{Guid.NewGuid():N}@example.com";
+        await EnsureUserAsync(otherUserEmail, "Test@1234");
+
+        Guid clientId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var client = new Client
+            {
+                FirstName = "Before",
+                LastName = "Update",
+                Email = $"flow-client-{Guid.NewGuid():N}@example.com",
+                UserId = ownerUserId
+            };
+
+            db.Clients.Add(client);
+            await db.SaveChangesAsync();
+            clientId = client.Id;
+        }
+
+        var ownerToken = await GetAccessTokenAsync(email, "Test@1234");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ownerToken);
+
+        var updateResponse = await _client.PatchAsJsonAsync(
+            $"/api/v1/clients/{clientId}",
+            new UpdateClientRequest(
+                FirstName: "After",
+                LastName: null,
+                Email: null,
+                Phone: " ",
+                CompanyName: " Prospect 2000 "
+            ));
+
+        updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var updated = await updateResponse.Content.ReadFromJsonAsync<ClientDto>();
+        updated.Should().NotBeNull();
+        updated!.FirstName.Should().Be("After");
+        updated.Phone.Should().BeNull();
+        updated.CompanyName.Should().Be("Prospect 2000");
+
+        var otherToken = await GetAccessTokenAsync(otherUserEmail, "Test@1234");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", otherToken);
+
+        var forbiddenDelete = await _client.DeleteAsync($"/api/v1/clients/{clientId}");
+        forbiddenDelete.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ownerToken);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/clients/{clientId}");
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var getDeletedResponse = await _client.GetAsync($"/api/v1/clients/{clientId}");
+        getDeletedResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task UpdateClient_WithWhitespaceFirstName_ReturnsBadRequest()
+    {
+        var email = $"client-invalid-{Guid.NewGuid():N}@example.com";
+        var ownerUserId = await EnsureUserAsync(email, "Test@1234");
+
+        Guid clientId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var client = new Client
+            {
+                FirstName = "Valid",
+                LastName = "Client",
+                Email = $"invalid-client-{Guid.NewGuid():N}@example.com",
+                UserId = ownerUserId
+            };
+
+            db.Clients.Add(client);
+            await db.SaveChangesAsync();
+            clientId = client.Id;
+        }
+
+        var token = await GetAccessTokenAsync(email, "Test@1234");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _client.PatchAsJsonAsync(
+            $"/api/v1/clients/{clientId}",
+            new UpdateClientRequest(
+                FirstName: "   ",
+                LastName: null,
+                Email: null,
+                Phone: null,
+                CompanyName: null
+            ));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
     private async Task<Guid> EnsureUserAsync(string email, string password)
     {
         using var scope = _factory.Services.CreateScope();

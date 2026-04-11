@@ -13,10 +13,14 @@
  */
 
 // Components
-// export { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
+export { AppShellComponent } from './layout/app-shell.component';
+export { TagAutocompleteComponent } from './components/tag-autocomplete/tag-autocomplete.component';
 
 // Directives
 // export { HighlightDirective } from './directives/highlight.directive';
 
 // Pipes
 // export { TruncatePipe } from './pipes/truncate.pipe';
+
+// Navigation
+export { BUSINESS_NAV_ITEMS, type BusinessNavItem } from './navigation/business-navigation';

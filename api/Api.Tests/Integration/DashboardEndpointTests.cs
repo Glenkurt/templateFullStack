@@ -101,6 +101,30 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
         summary.ActiveCampaigns.Should().Be(1);
     }
 
+    [Fact]
+    public async Task GetOverview_WithNoData_ReturnsEmptyCollectionsAndZeroedSummary()
+    {
+        var email = $"dashboard-empty-{Guid.NewGuid():N}@example.com";
+        var token = await GetAccessTokenAsync(email, "Test@1234");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _client.GetAsync("/api/v1/dashboard/overview");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var overview = await response.Content.ReadFromJsonAsync<DashboardOverviewDto>();
+
+        overview.Should().NotBeNull();
+        overview!.Summary.TotalRevenue.Should().Be(0m);
+        overview.Summary.TotalExpense.Should().Be(0m);
+        overview.Summary.NetProfit.Should().Be(0m);
+        overview.Summary.TotalClients.Should().Be(0);
+        overview.Summary.ActiveCampaigns.Should().Be(0);
+        overview.MonthlyFinance.Should().HaveCount(12);
+        overview.MonthlyFinance.Should().OnlyContain(point => point.Revenue == 0m && point.Expense == 0m);
+        overview.ActiveCampaigns.Should().BeEmpty();
+        overview.RecentClients.Should().BeEmpty();
+    }
+
     private async Task<Guid> EnsureUserAsync(string email, string password)
     {
         using var scope = _factory.Services.CreateScope();

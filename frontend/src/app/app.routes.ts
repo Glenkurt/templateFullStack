@@ -11,22 +11,6 @@ import { authGuard, adminGuard } from './core/guards/auth.guard';
  */
 export const routes: Routes = [
   {
-    path: '',
-    pathMatch: 'full',
-    redirectTo: 'home'
-  },
-  {
-    path: 'home',
-    // Home is the main app component content - no separate component needed
-    children: []
-  },
-  {
-    path: 'dashboard',
-    loadComponent: () =>
-      import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
-    canActivate: [authGuard]
-  },
-  {
     path: 'auth/login',
     loadComponent: () =>
       import('./features/auth/login/login.component').then(m => m.LoginComponent)
@@ -47,15 +31,60 @@ export const routes: Routes = [
       import('./features/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
   },
   {
-    path: 'admin',
-    loadComponent: () =>
-      import('./features/admin/admin.component').then(m => m.AdminComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
     path: 'pricing',
     loadComponent: () =>
       import('./features/pricing/pricing.component').then(m => m.PricingComponent)
+  },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./shared/layout/app-shell.component').then(m => m.AppShellComponent),
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard'
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      {
+        path: 'clients',
+        loadComponent: () =>
+          import('./features/clients/clients.component').then(m => m.ClientsComponent)
+      },
+      {
+        path: 'expenses',
+        loadComponent: () =>
+          import('./features/expenses/expenses.component').then(m => m.ExpensesComponent)
+      },
+      {
+        path: 'revenues',
+        loadComponent: () =>
+          import('./features/revenues/revenues.component').then(m => m.RevenuesComponent)
+      },
+      {
+        path: 'campaigns',
+        loadComponent: () =>
+          import('./features/campaigns/campaigns.component').then(m => m.CampaignsComponent)
+      },
+      {
+        path: 'admin',
+        loadComponent: () =>
+          import('./features/admin/admin.component').then(m => m.AdminComponent),
+        canActivate: [adminGuard]
+      },
+      {
+        path: 'billing/success',
+        loadComponent: () =>
+          import('./features/billing/success/success.component').then(
+            m => m.BillingSuccessComponent
+          )
+      }
+    ]
   },
   {
     path: 'billing/success',
@@ -65,6 +94,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'home'
+    redirectTo: 'dashboard'
   }
 ];

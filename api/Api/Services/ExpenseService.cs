@@ -27,8 +27,8 @@ public class ExpenseService : IExpenseService
                 e.Name,
                 e.Amount,
                 e.Date,
-                e.TagId,
-                e.Tag != null ? e.Tag.Name : null,
+                e.Tag != null && e.Tag.UserId == userId ? e.TagId : null,
+                e.Tag != null && e.Tag.UserId == userId ? e.Tag.Name : null,
                 e.CreatedAt
             ))
             .ToListAsync();
@@ -45,8 +45,8 @@ public class ExpenseService : IExpenseService
                 e.Name,
                 e.Amount,
                 e.Date,
-                e.TagId,
-                e.Tag != null ? e.Tag.Name : null,
+                e.Tag != null && e.Tag.UserId == userId ? e.TagId : null,
+                e.Tag != null && e.Tag.UserId == userId ? e.Tag.Name : null,
                 e.CreatedAt
             ))
             .FirstOrDefaultAsync();
@@ -56,7 +56,7 @@ public class ExpenseService : IExpenseService
     {
         if (request.TagId.HasValue)
         {
-            await EnsureTagExistsForUserAsync(request.TagId.Value, userId);
+            await EnsureTagExistsForUserAsync(request.TagId.Value, userId, TagCategory.Expense);
         }
 
         var expense = new Expense
@@ -72,7 +72,10 @@ public class ExpenseService : IExpenseService
         await _context.SaveChangesAsync();
 
         var tagName = expense.TagId.HasValue
-            ? await _context.Tags.Where(t => t.Id == expense.TagId.Value).Select(t => t.Name).FirstOrDefaultAsync()
+            ? await _context.Tags
+                .Where(t => t.Id == expense.TagId.Value && t.UserId == userId && t.Category == TagCategory.Expense)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync()
             : null;
 
         return new ExpenseDto(
@@ -109,16 +112,23 @@ public class ExpenseService : IExpenseService
             expense.Date = request.Date.Value;
         }
 
-        if (request.TagId.HasValue)
+        if (request.TagIdSpecified)
         {
-            await EnsureTagExistsForUserAsync(request.TagId.Value, userId);
-            expense.TagId = request.TagId.Value;
+            if (request.TagId.HasValue)
+            {
+                await EnsureTagExistsForUserAsync(request.TagId.Value, userId, TagCategory.Expense);
+            }
+
+            expense.TagId = request.TagId;
         }
 
         await _context.SaveChangesAsync();
 
         var tagName = expense.TagId.HasValue
-            ? await _context.Tags.Where(t => t.Id == expense.TagId.Value).Select(t => t.Name).FirstOrDefaultAsync()
+            ? await _context.Tags
+                .Where(t => t.Id == expense.TagId.Value && t.UserId == userId && t.Category == TagCategory.Expense)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync()
             : null;
 
         return new ExpenseDto(
@@ -145,12 +155,22 @@ public class ExpenseService : IExpenseService
         return true;
     }
 
-    private async Task EnsureTagExistsForUserAsync(Guid tagId, Guid userId)
+    private async Task EnsureTagExistsForUserAsync(Guid tagId, Guid userId, TagCategory category)
     {
-        var exists = await _context.Tags.AnyAsync(t => t.Id == tagId && t.UserId == userId);
-        if (!exists)
+        var tag = await _context.Tags
+            .AsNoTracking()
+            .Where(t => t.Id == tagId && t.UserId == userId)
+            .Select(t => new { t.Category })
+            .FirstOrDefaultAsync();
+
+        if (tag is null)
         {
             throw new InvalidOperationException("Tag not found.");
+        }
+
+        if (tag.Category != category)
+        {
+            throw new InvalidOperationException("Tag category is invalid.");
         }
     }
 }

@@ -1,1 +1,522 @@
 /* You can add global styles to this file, and also import other style files */
+
+app-dashboard {
+	display: block;
+}
+
+app-dashboard .page-header {
+	display: flex;
+	justify-content: space-between;
+	gap: 1.25rem;
+	align-items: flex-start;
+	margin-bottom: 1.5rem;
+}
+
+app-dashboard .header-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.75rem;
+}
+
+app-dashboard .eyebrow {
+	margin: 0 0 0.5rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: #8a6a2f;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+app-dashboard h1 {
+	margin: 0;
+	font-size: 2rem;
+	color: #18202a;
+}
+
+app-dashboard .intro {
+	max-width: 54rem;
+	margin: 0.75rem 0 0;
+	color: #51606f;
+	line-height: 1.6;
+}
+
+app-dashboard .status-pill {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2.75rem;
+	padding: 0 1rem;
+	border-radius: 999px;
+	background: #e9f3ef;
+	color: #125b52;
+	font-weight: 700;
+}
+
+app-dashboard .primary-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 2.75rem;
+	padding: 0 1rem;
+	border-radius: 999px;
+	background: #18202a;
+	color: #f6f3ec;
+	border: none;
+	cursor: pointer;
+	text-decoration: none;
+	font-weight: 600;
+}
+
+app-dashboard .primary-link:disabled,
+app-dashboard .ghost-button:disabled {
+	cursor: wait;
+	opacity: 0.7;
+}
+
+app-dashboard .banner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1rem;
+	padding: 1rem 1.1rem;
+	border-radius: 1rem;
+	border: 1px solid #e5c7b8;
+	background: #fff5ef;
+}
+
+app-dashboard .banner strong,
+app-dashboard .banner p {
+	display: block;
+}
+
+app-dashboard .banner strong {
+	color: #8a3b12;
+	margin-bottom: 0.25rem;
+}
+
+app-dashboard .banner p {
+	margin: 0;
+	color: #7a4f38;
+}
+
+app-dashboard .ghost-button,
+app-dashboard .section-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 2.5rem;
+	padding: 0 0.95rem;
+	border-radius: 999px;
+	border: 1px solid #cdd7df;
+	background: #ffffff;
+	color: #18202a;
+	text-decoration: none;
+	font-weight: 600;
+}
+
+app-dashboard .ghost-button {
+	cursor: pointer;
+}
+
+app-dashboard .state-card,
+app-dashboard .inline-state {
+	border-radius: 1.25rem;
+	border: 1px solid #d8dee5;
+	background: #ffffff;
+	padding: 1.25rem;
+}
+
+app-dashboard .state-card strong,
+app-dashboard .inline-state strong {
+	display: block;
+	color: #18202a;
+	margin-bottom: 0.35rem;
+}
+
+app-dashboard .state-card p,
+app-dashboard .inline-state p {
+	margin: 0;
+	color: #51606f;
+	line-height: 1.6;
+}
+
+app-dashboard .empty-state {
+	background: linear-gradient(180deg, #ffffff 0%, #f7f4ef 100%);
+}
+
+app-dashboard .stats-grid,
+app-dashboard .details-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 1rem;
+}
+
+app-dashboard .stats-grid {
+	margin-bottom: 1.5rem;
+}
+
+app-dashboard .stat-card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	background: #f6f3ec;
+	border: 1px solid #e0d6c7;
+	border-radius: 18px;
+	padding: 1.5rem;
+}
+
+app-dashboard .stat-card.accent {
+	background: linear-gradient(135deg, #18202a 0%, #26415e 100%);
+	border-color: transparent;
+}
+
+app-dashboard .stat-card.accent .stat-label,
+app-dashboard .stat-card.accent .stat-value,
+app-dashboard .stat-card.accent .stat-meta {
+	color: #f6f3ec;
+}
+
+app-dashboard .stat-card.negative {
+	background: #fff2ec;
+	border-color: #efc4b2;
+}
+
+app-dashboard .stat-value {
+	display: block;
+	font-size: 1.8rem;
+	font-weight: 700;
+	color: #18202a;
+}
+
+app-dashboard .stat-label {
+	display: block;
+	color: #51606f;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+app-dashboard .stat-meta {
+	color: #51606f;
+	line-height: 1.5;
+}
+
+app-dashboard .overview-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+app-dashboard .panel {
+	background: #ffffff;
+	border: 1px solid #d8dee5;
+	border-radius: 18px;
+	padding: 1.5rem;
+	box-shadow: 0 14px 30px rgba(24, 32, 42, 0.07);
+}
+
+app-dashboard .section-heading {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 1rem;
+	margin-bottom: 1.25rem;
+}
+
+app-dashboard .section-kicker {
+	margin: 0 0 0.5rem;
+	color: #8a6a2f;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+app-dashboard .section-heading h2 {
+	margin: 0 0 0.75rem;
+	color: #18202a;
+}
+
+app-dashboard .legend {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.85rem;
+	color: #51606f;
+	font-weight: 600;
+}
+
+app-dashboard .legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+app-dashboard .legend-swatch {
+	display: inline-block;
+	width: 0.9rem;
+	height: 0.9rem;
+	border-radius: 999px;
+}
+
+app-dashboard .legend-swatch.revenue,
+app-dashboard .revenue-point {
+	background: #0f766e;
+	fill: #0f766e;
+}
+
+app-dashboard .legend-swatch.expense,
+app-dashboard .expense-point {
+	background: #c2410c;
+	fill: #c2410c;
+}
+
+app-dashboard .chart-shell {
+	overflow-x: auto;
+}
+
+app-dashboard .trend-chart {
+	width: 100%;
+	min-width: 620px;
+	height: auto;
+}
+
+app-dashboard .chart-grid-line {
+	stroke: #e6edf2;
+	stroke-width: 1;
+}
+
+app-dashboard .chart-line {
+	fill: none;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke-width: 3;
+}
+
+app-dashboard .revenue-line {
+	stroke: #0f766e;
+}
+
+app-dashboard .expense-line {
+	stroke: #c2410c;
+}
+
+app-dashboard .chart-axis-label,
+app-dashboard .chart-month-label {
+	fill: #6b7a88;
+	font-size: 12px;
+}
+
+app-dashboard .chart-month-label {
+	text-anchor: middle;
+}
+
+app-dashboard .chart-empty {
+	min-height: 260px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+app-dashboard .chart-summary {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 0.75rem;
+	margin-top: 1rem;
+	padding-top: 1rem;
+	border-top: 1px solid #edf2f6;
+}
+
+app-dashboard .chart-summary span {
+	display: block;
+	margin-bottom: 0.25rem;
+	color: #6b7a88;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-size: 0.72rem;
+	font-weight: 700;
+}
+
+app-dashboard .chart-summary strong {
+	color: #18202a;
+}
+
+app-dashboard .spotlight-list {
+	display: grid;
+	gap: 0.9rem;
+}
+
+app-dashboard .spotlight-card {
+	border-radius: 1rem;
+	padding: 1rem;
+	background: #f7fafb;
+	border: 1px solid #dbe4ea;
+}
+
+app-dashboard .spotlight-card.alert {
+	background: #fff2ec;
+	border-color: #efc4b2;
+}
+
+app-dashboard .spotlight-label {
+	display: block;
+	margin-bottom: 0.5rem;
+	color: #6b7a88;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-size: 0.72rem;
+	font-weight: 700;
+}
+
+app-dashboard .spotlight-card strong {
+	display: block;
+	margin-bottom: 0.35rem;
+	color: #18202a;
+	font-size: 1.4rem;
+}
+
+app-dashboard .spotlight-card p {
+	margin: 0;
+	color: #51606f;
+	line-height: 1.6;
+}
+
+app-dashboard .details-grid {
+	margin-top: 1rem;
+}
+
+app-dashboard .stack-list {
+	display: grid;
+	gap: 0.9rem;
+}
+
+app-dashboard .list-row {
+	display: flex;
+	gap: 1rem;
+	padding: 1rem;
+	border-radius: 1rem;
+	background: #f8fafc;
+	border: 1px solid #e2e8ee;
+}
+
+app-dashboard .list-main {
+	min-width: 0;
+	flex: 1;
+}
+
+app-dashboard .list-title-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 0.35rem;
+}
+
+app-dashboard .list-title-row h3 {
+	margin: 0;
+	color: #18202a;
+	font-size: 1.05rem;
+}
+
+app-dashboard .list-main p {
+	margin: 0 0 0.9rem;
+	color: #51606f;
+}
+
+app-dashboard .list-main dl {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: 0.75rem;
+	margin: 0;
+}
+
+app-dashboard .list-main dt {
+	margin-bottom: 0.25rem;
+	color: #6b7a88;
+	font-size: 0.78rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	font-weight: 700;
+}
+
+app-dashboard .list-main dd {
+	margin: 0;
+	color: #18202a;
+	font-weight: 600;
+}
+
+app-dashboard .status-tag {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.35rem 0.7rem;
+	border-radius: 999px;
+	background: #eef2f6;
+	color: #435260;
+	font-size: 0.8rem;
+	font-weight: 700;
+}
+
+app-dashboard .status-tag.active {
+	background: #e9f3ef;
+	color: #125b52;
+}
+
+app-dashboard .client-row {
+	align-items: center;
+}
+
+app-dashboard .client-avatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 3rem;
+	height: 3rem;
+	border-radius: 999px;
+	background: #18202a;
+	color: #f6f3ec;
+	font-weight: 700;
+}
+
+app-dashboard .client-date {
+	color: #6b7a88;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+app-dashboard .sync-note {
+	margin: 1rem 0 0;
+	color: #51606f;
+	text-align: right;
+}
+
+@media (max-width: 960px) {
+	app-dashboard .overview-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 720px) {
+	app-dashboard .page-header,
+	app-dashboard .header-actions,
+	app-dashboard .section-heading,
+	app-dashboard .list-title-row,
+	app-dashboard .banner {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	app-dashboard .list-row {
+		flex-direction: column;
+	}
+
+	app-dashboard .client-row {
+		align-items: flex-start;
+	}
+
+	app-dashboard .sync-note {
+		text-align: left;
+	}
+}

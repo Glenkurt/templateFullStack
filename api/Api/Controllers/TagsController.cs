@@ -47,6 +47,7 @@ public class TagsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(TagDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<TagDto>> CreateTag([FromBody] CreateTagRequest request)
     {
         try
@@ -55,12 +56,21 @@ public class TagsController : ControllerBase
             var created = await _tagService.CreateTagAsync(request, userId);
             return CreatedAtAction(nameof(GetTagById), new { id = created.Id }, created);
         }
-        catch (InvalidOperationException ex)
+        catch (ArgumentException ex)
         {
             return BadRequest(new ProblemDetails
             {
                 Status = StatusCodes.Status400BadRequest,
                 Title = "Invalid tag",
+                Detail = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "Tag conflict",
                 Detail = ex.Message
             });
         }
@@ -70,6 +80,7 @@ public class TagsController : ControllerBase
     [ProducesResponseType(typeof(TagDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<TagDto>> UpdateTag(Guid id, [FromBody] UpdateTagRequest request)
     {
         try
@@ -83,12 +94,21 @@ public class TagsController : ControllerBase
 
             return Ok(updated);
         }
-        catch (InvalidOperationException ex)
+        catch (ArgumentException ex)
         {
             return BadRequest(new ProblemDetails
             {
                 Status = StatusCodes.Status400BadRequest,
                 Title = "Invalid tag",
+                Detail = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "Tag conflict",
                 Detail = ex.Message
             });
         }
